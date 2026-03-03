@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>网络有趣内容归档</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-text">
+        <h1>网络有趣内容归档</h1>
+        <p>Lazymice收集的一些有趣的电子备份，希望你喜欢</p>
+      </div>
+      <div class="header-meta">
+        <button id="refresh-btn" type="button">重新载入目录</button>
+      </div>
+    </header>
+    <main class="layout">
+      <aside class="sidebar">
+        <h2>目录导航</h2>
+        <div id="tree-container" class="tree-container"></div>
+      </aside>
+      <section class="content">
+        <nav id="breadcrumb" class="breadcrumb"></nav>
+        <div id="media-source-hint" class="media-source-hint">当前媒体来源：未选择</div>
+        <div id="listing" class="listing"></div>
+        <div id="preview" class="preview">
+          <div class="placeholder">请选择一个文件即可在此处预览。</div>
+        </div>
+      </section>
+    </main>
+    <script src="config.js"></script>
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
