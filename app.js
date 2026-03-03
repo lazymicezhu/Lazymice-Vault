@@ -8,8 +8,7 @@
   const previewEl = document.getElementById("preview");
   const mediaSourceHintEl = document.getElementById("media-source-hint");
   const refreshBtn = document.getElementById("refresh-btn");
-  const RESOURCE_PREFIX = "..";
-  const LOCAL_BASE_URL = normalizeBaseUrl(window.LOCAL_ASSET_BASE_URL || "") || normalizeBaseUrl(RESOURCE_PREFIX);
+  const LOCAL_BASE_URL = normalizeBaseUrl(window.LOCAL_ASSET_BASE_URL || "");
   const ASSET_BASE_URL = normalizeBaseUrl(window.ASSET_BASE_URL || "");
 
   const videoExt = new Set([".mp4", ".mov", ".m4v"]);
@@ -206,7 +205,7 @@
     }
 
     const url = fileUrl;
-    setMediaSourceHint(url === urlCandidates[0] ? "本地" : "云端");
+    setMediaSourceHint(inferSourceLabel(url));
     if (videoExt.has(file.ext)) {
       const video = document.createElement("video");
       video.controls = true;
@@ -268,18 +267,18 @@
   }
 
   function buildFileUrlCandidates(relativePath) {
-    if (!relativePath) {
-      return [LOCAL_BASE_URL || RESOURCE_PREFIX];
-    }
+    if (!relativePath) return [];
 
     const normalizedPath = String(relativePath).replace(/^\/+/, "");
     const encodedPath = encodePathSegments(normalizedPath);
-    const localUrl = joinUrl(LOCAL_BASE_URL || RESOURCE_PREFIX, encodedPath);
-    if (!ASSET_BASE_URL || ASSET_BASE_URL === LOCAL_BASE_URL) {
-      return [localUrl];
+    const candidates = [];
+    if (LOCAL_BASE_URL) {
+      candidates.push(joinUrl(LOCAL_BASE_URL, encodedPath));
     }
-    const assetUrl = joinUrl(ASSET_BASE_URL, encodedPath);
-    return [localUrl, assetUrl];
+    if (ASSET_BASE_URL && ASSET_BASE_URL !== LOCAL_BASE_URL) {
+      candidates.push(joinUrl(ASSET_BASE_URL, encodedPath));
+    }
+    return candidates;
   }
 
   function normalizeBaseUrl(baseUrl) {
@@ -305,6 +304,17 @@
     }
   }
 
+  function inferSourceLabel(url) {
+    if (!url) return "未选择";
+    if ((LOCAL_BASE_URL && url.includes("/local-media/")) || url.startsWith("file://")) {
+      return "本地";
+    }
+    if (ASSET_BASE_URL && url.startsWith(ASSET_BASE_URL)) {
+      return "云端";
+    }
+    return "未知";
+  }
+
   function attachFallbackOnError(mediaElement, path, candidates) {
     if (!Array.isArray(candidates) || candidates.length < 2) return;
     let currentIndex = 0;
@@ -320,7 +330,7 @@
       if (mediaElement.tagName === "VIDEO" || mediaElement.tagName === "AUDIO") {
         mediaElement.play().catch(() => {});
       }
-      setMediaSourceHint("云端");
+      setMediaSourceHint(inferSourceLabel(nextUrl));
     });
   }
 
