@@ -9,7 +9,7 @@
   const mediaSourceHintEl = document.getElementById("media-source-hint");
   const refreshBtn = document.getElementById("refresh-btn");
   const RESOURCE_PREFIX = "..";
-  const LOCAL_BASE_URL = normalizeBaseUrl(RESOURCE_PREFIX);
+  const LOCAL_BASE_URL = normalizeBaseUrl(window.LOCAL_ASSET_BASE_URL || "") || normalizeBaseUrl(RESOURCE_PREFIX);
   const ASSET_BASE_URL = normalizeBaseUrl(window.ASSET_BASE_URL || "");
 
   const videoExt = new Set([".mp4", ".mov", ".m4v"]);
@@ -273,17 +273,36 @@
     }
 
     const normalizedPath = String(relativePath).replace(/^\/+/, "");
-    const localUrl = `${LOCAL_BASE_URL || RESOURCE_PREFIX}/${normalizedPath}`;
+    const encodedPath = encodePathSegments(normalizedPath);
+    const localUrl = joinUrl(LOCAL_BASE_URL || RESOURCE_PREFIX, encodedPath);
     if (!ASSET_BASE_URL || ASSET_BASE_URL === LOCAL_BASE_URL) {
       return [localUrl];
     }
-    const assetUrl = `${ASSET_BASE_URL}/${normalizedPath}`;
+    const assetUrl = joinUrl(ASSET_BASE_URL, encodedPath);
     return [localUrl, assetUrl];
   }
 
   function normalizeBaseUrl(baseUrl) {
     if (!baseUrl) return "";
     return String(baseUrl).replace(/\/+$/, "");
+  }
+
+  function encodePathSegments(path) {
+    return String(path)
+      .split("/")
+      .map((segment) => encodeURIComponent(segment))
+      .join("/");
+  }
+
+  function joinUrl(baseUrl, path) {
+    const base = String(baseUrl || "");
+    const rel = String(path || "");
+    try {
+      const normalizedBase = base.endsWith("/") ? base : `${base}/`;
+      return new URL(rel, normalizedBase).toString();
+    } catch {
+      return `${base.replace(/\/+$/, "")}/${rel.replace(/^\/+/, "")}`;
+    }
   }
 
   function attachFallbackOnError(mediaElement, path, candidates) {
